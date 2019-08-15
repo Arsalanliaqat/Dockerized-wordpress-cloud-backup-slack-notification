@@ -1,0 +1,14 @@
+version: '3.3'
+services:
+  backup:
+    volumes:
+      - ssh:/root/.ssh
+
+  storageboxkey:
+    container_name: ssh_key
+    build: ./ssh
+    volumes:
+      - ssh:/root/.ssh
+
+volumes:
+  ssh:

@@ -1,0 +1,61 @@
+version: '3.3'
+
+services:
+
+  db:
+    image: mariadb:10.4.7
+    container_name: db
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - database:/var/lib/mysql
+
+  wordpress:
+    container_name: wordpress
+    depends_on:
+      - db
+    image: wordpress:5.2.2-apache
+    volumes:
+      - wordpress_html:/var/www/html
+    ports:
+      - 8000:80
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+
+  backup:
+    container_name: backup
+    build: .
+    environment:
+      TZ: Europe/Berlin
+      MYSQL_HOST: db
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      # for testing
+      KEEP_MINUTELY: 5
+      KEEP_HOURLY: 24
+      KEEP_DAILY: 7
+      KEEP_WEEKLY: 4
+      KEEP_MONTHLY: 6
+      DESTINATION_SFTP_HOST: username.your-storagebox.de
+      DESTINATION_SFTP_USER: username
+      DESTINATION_SFTP_PATH: dumps
+      DESTINATION_SFTP_PORT: 23
+      NOTIFICATION_SLACK_WEBHOOK_URL: https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+      NOTIFICATION_SLACK_USERNAME: backup_buddy
+    volumes:
+      - ./ssh:/root/.ssh
+      - wordpress_html:/var/www/html
+    depends_on:
+      - db
+
+volumes:
+  database:
+  wordpress_html:
